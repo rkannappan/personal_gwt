@@ -175,7 +175,7 @@ public class GWTReportUI implements EntryPoint {
 //  }
   
   private void refreshTasks() {
-	    String url = REST_WS_URL + "http://localhost:8080/DataControllerWebServices/TaskService";
+	    String url = REST_WS_URL + "http://localhost:8080/DataControllerWebServices/TaskService/REPORT";
 
 	    url = URL.encode(url);
 
