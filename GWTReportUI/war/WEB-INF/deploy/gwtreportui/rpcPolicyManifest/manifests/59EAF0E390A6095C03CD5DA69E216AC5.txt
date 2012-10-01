@@ -1,0 +1,2 @@
+serviceClass: com.axioma.reportui.client.GreetingService
+path: A9E18E4D6A9AFECEDB234149233984A6.gwt.rpc

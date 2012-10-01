@@ -1,0 +1,23 @@
+/* Formatting specific to the GWT Report UI application */
+
+body {
+  padding: 10px;
+}
+
+/* stock list header row */
+.reportTaskHeader {
+  background-color: #2062B8;
+  color: white;
+  font-style: italic;
+}
+
+/* stock list flex table */
+.reportTaskTable {
+  border: 1px solid silver;
+  padding: 2px;
+  margin-bottom:6px;
+}
+
+.errorMessage {
+  color: red;
+}
