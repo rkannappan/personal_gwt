@@ -89,11 +89,18 @@ public class GWTReportUI implements EntryPoint {
  // Assemble Main panel.
     errorMsgLabel.setStyleName("errorMessage");
     errorMsgLabel.setVisible(false);
+    
+    Label raTasksLabel = new Label();
+    raTasksLabel.setText("Risk Analysis Tasks");
 
-    mainPanel.add(errorMsgLabel);
+    Label reportTasksLabel = new Label();
+    reportTasksLabel.setText("Report Tasks");
 
     // Assemble Main panel.
+    mainPanel.add(errorMsgLabel);
+    mainPanel.add(raTasksLabel);
     mainPanel.add(raTasksFlexTable);
+    mainPanel.add(reportTasksLabel);
     mainPanel.add(reportingTasksFlexTable);
     mainPanel.add(addPanel);
     mainPanel.add(lastUpdatedLabel);
