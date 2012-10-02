@@ -4,15 +4,15 @@ body {
   padding: 10px;
 }
 
-/* stock list header row */
-.reportTaskHeader {
+/* task table header row */
+.taskHeader {
   background-color: #2062B8;
   color: white;
   font-style: italic;
 }
 
-/* stock list flex table */
-.reportTaskTable {
+/* task table */
+.taskTable {
   border: 1px solid silver;
   padding: 2px;
   margin-bottom:6px;

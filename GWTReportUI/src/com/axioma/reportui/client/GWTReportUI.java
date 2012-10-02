@@ -36,6 +36,7 @@ public class GWTReportUI implements EntryPoint {
 
   private static final int REFRESH_INTERVAL = 5000; // ms
   private VerticalPanel mainPanel = new VerticalPanel();
+  private FlexTable raTasksFlexTable = new FlexTable();
   private FlexTable reportingTasksFlexTable = new FlexTable();
   private HorizontalPanel addPanel = new HorizontalPanel();
   private Button addStockButton = new Button("Add");
@@ -44,12 +45,20 @@ public class GWTReportUI implements EntryPoint {
   private Label errorMsgLabel = new Label();
   
   private static final String REST_WS_URL = GWT.getModuleBaseURL() + "serverProxy?q=";
+  
+  private static final int RISK_ANALYSIS = 1;
+  private static final int REPORT = 2;
 
   /**
    * Entry point method.
    */
   public void onModuleLoad() {
-    // Create table for stock data.
+	  raTasksFlexTable.setText(0, 0, "Task Name");
+	  raTasksFlexTable.setText(0, 1, "Portfolio");
+	  raTasksFlexTable.setText(0, 2, "Benchmark");
+	  raTasksFlexTable.setText(0, 3, "Risk Model");
+	  
+    // Create table for report tasks.
     reportingTasksFlexTable.setText(0, 0, "Task Name");
     reportingTasksFlexTable.setText(0, 1, "Portfolio");
     reportingTasksFlexTable.setText(0, 2, "Benchmark");
@@ -57,9 +66,13 @@ public class GWTReportUI implements EntryPoint {
     reportingTasksFlexTable.setText(0, 4, "Classification");    
 
     // Add styles to elements in the stock list table.
+    raTasksFlexTable.setCellPadding(6);
+    raTasksFlexTable.getRowFormatter().addStyleName(0, "taskHeader");
+    raTasksFlexTable.addStyleName("taskTable");    
+    
     reportingTasksFlexTable.setCellPadding(6);
-    reportingTasksFlexTable.getRowFormatter().addStyleName(0, "reportTaskHeader");
-    reportingTasksFlexTable.addStyleName("reportTaskTable");
+    reportingTasksFlexTable.getRowFormatter().addStyleName(0, "taskHeader");
+    reportingTasksFlexTable.addStyleName("taskTable");
 //    reportingTasksFlexTable.getCellFormatter().addStyleName(0, 1, "watchListNumericColumn");
 //    reportingTasksFlexTable.getCellFormatter().addStyleName(0, 2, "watchListNumericColumn");
 //    reportingTasksFlexTable.getCellFormatter().addStyleName(0, 3, "watchListRemoveColumn");
@@ -75,12 +88,13 @@ public class GWTReportUI implements EntryPoint {
     mainPanel.add(errorMsgLabel);
 
     // Assemble Main panel.
+    mainPanel.add(raTasksFlexTable);
     mainPanel.add(reportingTasksFlexTable);
     mainPanel.add(addPanel);
     mainPanel.add(lastUpdatedLabel);
 
     // Associate the Main panel with the HTML host page.
-    RootPanel.get("reportTasks").add(mainPanel);
+    RootPanel.get("tasks").add(mainPanel);
 
     // Setup timer to refresh list automatically.
     Timer refreshTimer = new Timer() {
@@ -175,7 +189,12 @@ public class GWTReportUI implements EntryPoint {
 //  }
   
   private void refreshTasks() {
-	    String url = REST_WS_URL + "http://localhost:8080/DataControllerWebServices/TaskService/REPORT";
+	  this.refreshTasks(RISK_ANALYSIS);
+	  this.refreshTasks(REPORT);
+  }
+  
+  private void refreshTasks(final int taskType) {
+	    String url = getUrlByTaskType(taskType);
 
 	    url = URL.encode(url);
 
@@ -191,7 +210,7 @@ public class GWTReportUI implements EntryPoint {
 	        public void onResponseReceived(Request request, Response response) {
 	          if (200 == response.getStatusCode()) {
 	        	  System.out.println("Response from server: " + response.getText());
-	            updateTable(asArrayOfReportTask(response.getText()));
+	            updateTable(asArrayOfTask(response.getText()), taskType);
 	          } else {
 	            displayError("Couldn't retrieve JSON (" + response.getStatusText()
 	                + ")");
@@ -208,11 +227,9 @@ public class GWTReportUI implements EntryPoint {
    *
    * @param tasks Stock data for all rows.
    */
-  private void updateTable(JsArray<ReportTask> tasks) {
-	this.reportingTasksFlexTable.clear();  
-	  
+  private void updateTable(JsArray<ReportTask> tasks, final int taskType) {
     for (int i = 0; i < tasks.length(); i++) {
-      updateTable(tasks.get(i));
+      updateTable(tasks.get(i), getTableByTaskType(taskType), taskType);
     }
 
     // Display timestamp showing last refresh.
@@ -228,20 +245,44 @@ public class GWTReportUI implements EntryPoint {
    *
    * @param reportTask report task for a single row.
    */
-  private void updateTable(ReportTask reportTask) {
-    int row = reportingTasksFlexTable.getRowCount();
-    reportingTasksFlexTable.setText(row, 0, reportTask.getTaskName());
-    reportingTasksFlexTable.setText(row, 1, reportTask.getParams().getPortfolio());
-    reportingTasksFlexTable.setText(row, 2, reportTask.getParams().getBenchmark());	  
-    reportingTasksFlexTable.setText(row, 3, reportTask.getParams().getRiskModel());	  
-    reportingTasksFlexTable.setText(row, 4, reportTask.getParams().getClassification());	  	  
+  private void updateTable(ReportTask reportTask, final FlexTable table, final int taskType) {
+    int row = table.getRowCount();
+    table.setText(row, 0, reportTask.getTaskName());
+    table.setText(row, 1, reportTask.getParams().getPortfolio());
+    table.setText(row, 2, reportTask.getParams().getBenchmark());	  
+    table.setText(row, 3, reportTask.getParams().getRiskModel());
+    if (taskType == REPORT) {
+    	table.setText(row, 4, reportTask.getParams().getClassification());
+    }
   }
+  
+  private String getUrlByTaskType(final int taskType) {
+	  String url = REST_WS_URL + "http://localhost:8080/DataControllerWebServices/TaskService/";
+	  if (taskType == RISK_ANALYSIS) {
+		  url += "RISK_ANALYSIS";
+	  } else {
+		  url += "REPORT";
+	  }
+	  
+	  return url;
+  }
+  
+  private FlexTable getTableByTaskType(final int taskType) {
+	  FlexTable table = null;
+	  if (taskType == RISK_ANALYSIS) {
+		  table = raTasksFlexTable;
+	  } else {
+		  table = reportingTasksFlexTable;
+	  }
+	  
+	  return table;
+  }  
   
   /**
    * Convert the string of JSON into JavaScript object.
    */
-  private final native JsArray<ReportTask> asArrayOfReportTask(String json) /*-{
-    return eval('(' + json + ')');
+  private final native JsArray<ReportTask> asArrayOfTask(String json) /*-{
+    return eval(json);
   }-*/;  
   
   /**
