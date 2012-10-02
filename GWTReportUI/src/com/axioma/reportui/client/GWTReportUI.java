@@ -227,7 +227,7 @@ public class GWTReportUI implements EntryPoint {
    *
    * @param tasks Stock data for all rows.
    */
-  private void updateTable(JsArray<ReportTask> tasks, final int taskType) {
+  private void updateTable(JsArray<Task> tasks, final int taskType) {
     for (int i = 0; i < tasks.length(); i++) {
       updateTable(tasks.get(i), getTableByTaskType(taskType), taskType);
     }
@@ -245,7 +245,7 @@ public class GWTReportUI implements EntryPoint {
    *
    * @param reportTask report task for a single row.
    */
-  private void updateTable(ReportTask reportTask, final FlexTable table, final int taskType) {
+  private void updateTable(Task reportTask, final FlexTable table, final int taskType) {
     int row = table.getRowCount();
     table.setText(row, 0, reportTask.getTaskName());
     table.setText(row, 1, reportTask.getParams().getPortfolio());
@@ -281,7 +281,7 @@ public class GWTReportUI implements EntryPoint {
   /**
    * Convert the string of JSON into JavaScript object.
    */
-  private final native JsArray<ReportTask> asArrayOfTask(String json) /*-{
+  private final native JsArray<Task> asArrayOfTask(String json) /*-{
     return eval(json);
   }-*/;  
   
