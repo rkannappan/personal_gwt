@@ -30,18 +30,23 @@ import com.google.gwt.http.client.Response;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 
 public class GWTReportUI implements EntryPoint {
 
-  private static final int REFRESH_INTERVAL = 5000; // ms
+  private static final int REFRESH_INTERVAL = 30000; // ms
   private VerticalPanel mainPanel = new VerticalPanel();
   private FlexTable raTasksFlexTable = new FlexTable();
   private FlexTable reportingTasksFlexTable = new FlexTable();
   private HorizontalPanel addPanel = new HorizontalPanel();
   private Button addStockButton = new Button("Add");
   private Label lastUpdatedLabel = new Label();
-  private ArrayList<String> tasks = new ArrayList<String>();
+  private Set<String> raTaskNames = new HashSet<String>();
+  private Set<String> reportTaskNames = new HashSet<String>();
   private Label errorMsgLabel = new Label();
   
   private static final String REST_WS_URL = GWT.getModuleBaseURL() + "serverProxy?q=";
@@ -241,19 +246,43 @@ public class GWTReportUI implements EntryPoint {
   }
 
   /**
-   * Update a single row in the report tasks table.
+   * Update a single row in the tasks table.
    *
-   * @param reportTask report task for a single row.
+   * @param task the task for a single row.
    */
-  private void updateTable(Task reportTask, final FlexTable table, final int taskType) {
+  private void updateTable(Task task, final FlexTable table, final int taskType) {
+	 if (!isNewTask(task, taskType)) {
+		 return;
+	 }
+	 
     int row = table.getRowCount();
-    table.setText(row, 0, reportTask.getTaskName());
-    table.setText(row, 1, reportTask.getParams().getPortfolio());
-    table.setText(row, 2, reportTask.getParams().getBenchmark());	  
-    table.setText(row, 3, reportTask.getParams().getRiskModel());
+    table.setText(row, 0, task.getTaskName());
+    table.setText(row, 1, task.getParams().getPortfolio());
+    table.setText(row, 2, task.getParams().getBenchmark());	  
+    table.setText(row, 3, task.getParams().getRiskModel());
     if (taskType == REPORT) {
-    	table.setText(row, 4, reportTask.getParams().getClassification());
+    	table.setText(row, 4, task.getParams().getClassification());
     }
+  }
+  
+  private boolean isNewTask(final Task task, final int taskType) {
+	  final String taskName = task.getTaskName();
+	  
+	  if (taskType == RISK_ANALYSIS) {
+		  if (raTaskNames.contains(taskName)) {
+			  return false;
+		  } else {
+			  raTaskNames.add(taskName);
+			  return true;
+		  }
+	  } else {
+		  if (reportTaskNames.contains(taskName)) {
+			  return false;
+		  } else {
+			  reportTaskNames.add(taskName);
+			  return true;
+		  }		  
+	  }
   }
   
   private String getUrlByTaskType(final int taskType) {
