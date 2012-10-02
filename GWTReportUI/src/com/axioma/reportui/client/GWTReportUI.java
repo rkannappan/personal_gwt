@@ -62,6 +62,7 @@ public class GWTReportUI implements EntryPoint {
 	  raTasksFlexTable.setText(0, 1, "Portfolio");
 	  raTasksFlexTable.setText(0, 2, "Benchmark");
 	  raTasksFlexTable.setText(0, 3, "Risk Model");
+	  raTasksFlexTable.setText(0, 4, "Run");
 	  
     // Create table for report tasks.
     reportingTasksFlexTable.setText(0, 0, "Task Name");
@@ -69,6 +70,7 @@ public class GWTReportUI implements EntryPoint {
     reportingTasksFlexTable.setText(0, 2, "Benchmark");
     reportingTasksFlexTable.setText(0, 3, "Risk Model");
     reportingTasksFlexTable.setText(0, 4, "Classification");    
+    reportingTasksFlexTable.setText(0, 5, "Run");
 
     // Add styles to elements in the stock list table.
     raTasksFlexTable.setCellPadding(6);
@@ -107,15 +109,17 @@ public class GWTReportUI implements EntryPoint {
 
     // Associate the Main panel with the HTML host page.
     RootPanel.get("tasks").add(mainPanel);
+    
+    this.refreshTasks();
 
     // Setup timer to refresh list automatically.
-    Timer refreshTimer = new Timer() {
-      @Override
-      public void run() {
-        refreshTasks();
-      }
-    };
-    refreshTimer.scheduleRepeating(REFRESH_INTERVAL);
+//    Timer refreshTimer = new Timer() {
+//      @Override
+//      public void run() {
+//        refreshTasks();
+//      }
+//    };
+//    refreshTimer.scheduleRepeating(REFRESH_INTERVAL);
 
 //    // Listen for mouse events on the Add button.
 //    addStockButton.addClickHandler(new ClickHandler() {
@@ -208,31 +212,35 @@ public class GWTReportUI implements EntryPoint {
   private void refreshTasks(final int taskType) {
 	    String url = getUrlByTaskType(taskType);
 
-	    url = URL.encode(url);
+	    this.sendRequestToServer(url, taskType, new RequestCallback() {
+	        public void onError(Request request, Throwable exception) {
+		          displayError("Couldn't retrieve JSON");
+		        }
 
-	 // Send request to server and catch any errors.
-	    RequestBuilder builder = new RequestBuilder(RequestBuilder.GET, url);
+		        public void onResponseReceived(Request request, Response response) {
+		          if (200 == response.getStatusCode()) {
+		        	  System.out.println("Response from server: " + response.getText());
+		            updateTable(asArrayOfTask(response.getText()), taskType);
+		          } else {
+		            displayError("Couldn't retrieve JSON (" + response.getStatusText()
+		                + ")");
+		          }
+		        }
+		 });
+   }
+  
+  private void sendRequestToServer(final String url, final int taskType, final RequestCallback requestCallBack) {
+	  final String encodedURL = URL.encode(url);
+	  
+		 // Send request to server and catch any errors.
+	    RequestBuilder builder = new RequestBuilder(RequestBuilder.GET, encodedURL);
 
 	    try {
-	      builder.sendRequest(null, new RequestCallback() {
-	        public void onError(Request request, Throwable exception) {
-	          displayError("Couldn't retrieve JSON");
-	        }
-
-	        public void onResponseReceived(Request request, Response response) {
-	          if (200 == response.getStatusCode()) {
-	        	  System.out.println("Response from server: " + response.getText());
-	            updateTable(asArrayOfTask(response.getText()), taskType);
-	          } else {
-	            displayError("Couldn't retrieve JSON (" + response.getStatusText()
-	                + ")");
-	          }
-	        }
-	      });
+	      builder.sendRequest(null, requestCallBack);
 	    } catch (RequestException e) {
 	      displayError("Couldn't retrieve JSON");
 	    }
-	  }  
+  }
 
   /**
    * Update the Price and Change fields all the rows in the stock table.
@@ -257,7 +265,7 @@ public class GWTReportUI implements EntryPoint {
    *
    * @param task the task for a single row.
    */
-  private void updateTable(Task task, final FlexTable table, final int taskType) {
+  private void updateTable(final Task task, final FlexTable table, final int taskType) {
 	 if (!isNewTask(task, taskType)) {
 		 return;
 	 }
@@ -270,6 +278,33 @@ public class GWTReportUI implements EntryPoint {
     if (taskType == REPORT) {
     	table.setText(row, 4, task.getParams().getClassification());
     }
+    
+    // Add a button to run the task.
+    Button runTaskButton = new Button("<img border='0' src='images/RunTask.png'/>");
+    runTaskButton.addClickHandler(new ClickHandler() {
+      public void onClick(ClickEvent event) {
+    	  String url = REST_WS_URL + "http://localhost:8080/DataControllerWebServices/TaskService/run/" + getTaskTypeName(taskType) + "/" + task.getTaskName();
+    	  sendRequestToServer(url, taskType, new RequestCallback() {
+  	        public void onError(Request request, Throwable exception) {
+  	          displayError("Error running task " + task.getTaskName());
+  	        }
+
+  	        public void onResponseReceived(Request request, Response response) {
+  	          if (200 == response.getStatusCode()) {
+  	        	  System.out.println("Successfully ran task " + task.getTaskName());
+  	          } else {
+  	        	  System.out.println("Response status code: " + response.getStatusCode());
+  	        	displayError("Error running task " + task.getTaskName());
+  	          }
+  	        }
+  	      });
+      }
+    });
+    int runTaskButtonColumn = 4;
+    if (taskType == REPORT) {
+    	runTaskButtonColumn = 5;
+    }
+    table.setWidget(row, runTaskButtonColumn, runTaskButton);    
   }
   
   private boolean isNewTask(final Task task, final int taskType) {
@@ -302,6 +337,17 @@ public class GWTReportUI implements EntryPoint {
 	  
 	  return url;
   }
+  
+  private String getTaskTypeName(final int taskType) {
+	  String taskTypeName = null;
+	  if (taskType == RISK_ANALYSIS) {
+		  taskTypeName = "RISK_ANALYSIS";
+	  } else {
+		  taskTypeName = "REPORT";
+	  }
+	  
+	  return taskTypeName;
+  }  
   
   private FlexTable getTableByTaskType(final int taskType) {
 	  FlexTable table = null;
