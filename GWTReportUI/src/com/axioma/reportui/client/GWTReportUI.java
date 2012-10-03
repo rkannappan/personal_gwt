@@ -252,13 +252,20 @@ public class GWTReportUI implements EntryPoint {
   }
   
   private void showProgressBar(final int taskType, final String taskName) {	  
-	  final String url = REST_WS_URL + "http://localhost:8080/DataControllerWebServices/TaskService/progress/" + getTaskTypeName(taskType) + "/" + taskName;
+	  final String progressURL = REST_WS_URL + "http://localhost:8080/DataControllerWebServices/TaskService/progress/" + getTaskTypeName(taskType) + "/" + taskName;
+	  
+	    Timer waitTimer = new Timer() {
+		      @Override
+		      public void run() {
+		      }
+		    };
+		    waitTimer.schedule(5000);
 		  
 	    Timer refreshTimer = new Timer() {
 	      @Override
 	      public void run() {
 	    	  if (taskRunning) {
-	    		  getProgress(url, taskType, taskName);
+	    		  getProgress(progressURL, taskType, taskName);
 	    	  } else {
 	    		  this.cancel();
 	    	  }
@@ -283,6 +290,23 @@ public class GWTReportUI implements EntryPoint {
 	        }
 	      });
   }
+  
+  private void consumeAllProgressMessages(final String url, final int taskType, final String taskName) {
+	  sendRequestToServer(url, taskType, new RequestCallback() {
+	        public void onError(Request request, Throwable exception) {
+	          displayError("Error running task " + taskName);
+	        }
+
+	        public void onResponseReceived(Request request, Response response) {
+	          if (200 == response.getStatusCode()) {
+	        	  System.out.println("Progress info " + new Date() + response.getText());
+	          } else {
+	        	  System.out.println("Response status code: " + response.getStatusCode());
+	        	displayError("Error running task " + taskName);
+	          }
+	        }
+	      });
+  }  
 
   private void updateTable(JsArray<Task> tasks, final int taskType) {
     for (int i = 0; i < tasks.length(); i++) {
