@@ -39,6 +39,7 @@ import java.util.Set;
 public class GWTReportUI implements EntryPoint {
 
   private static final int REFRESH_INTERVAL = 30000; // ms
+  private static final int PROGRESS_REFRESH_INTERVAL = 1000; // ms
   private VerticalPanel mainPanel = new VerticalPanel();
   private FlexTable raTasksFlexTable = new FlexTable();
   private FlexTable reportingTasksFlexTable = new FlexTable();
@@ -48,6 +49,7 @@ public class GWTReportUI implements EntryPoint {
   private Set<String> raTaskNames = new HashSet<String>();
   private Set<String> reportTaskNames = new HashSet<String>();
   private Label errorMsgLabel = new Label();
+  boolean taskRunning = false;
   
   private static final String REST_WS_URL = GWT.getModuleBaseURL() + "serverProxy?q=";
   
@@ -248,12 +250,40 @@ public class GWTReportUI implements EntryPoint {
 	      displayError("Couldn't retrieve JSON");
 	    }
   }
+  
+  private void showProgressBar(final int taskType, final String taskName) {	  
+	  final String url = REST_WS_URL + "http://localhost:8080/DataControllerWebServices/TaskService/progress/" + getTaskTypeName(taskType) + "/" + taskName;
+		  
+	    Timer refreshTimer = new Timer() {
+	      @Override
+	      public void run() {
+	    	  if (taskRunning) {
+	    		  getProgress(url, taskType, taskName);
+	    	  } else {
+	    		  this.cancel();
+	    	  }
+	      }
+	    };
+	    refreshTimer.scheduleRepeating(PROGRESS_REFRESH_INTERVAL);
+  }
+  
+  private void getProgress(final String url, final int taskType, final String taskName) {
+	  sendRequestToServer(url, taskType, new RequestCallback() {
+	        public void onError(Request request, Throwable exception) {
+	          displayError("Error running task " + taskName);
+	        }
 
-  /**
-   * Update the Price and Change fields all the rows in the stock table.
-   *
-   * @param tasks Stock data for all rows.
-   */
+	        public void onResponseReceived(Request request, Response response) {
+	          if (200 == response.getStatusCode()) {
+	        	  System.out.println("Progress info " + new Date() + response.getText());
+	          } else {
+	        	  System.out.println("Response status code: " + response.getStatusCode());
+	        	displayError("Error running task " + taskName);
+	          }
+	        }
+	      });
+  }
+
   private void updateTable(JsArray<Task> tasks, final int taskType) {
     for (int i = 0; i < tasks.length(); i++) {
       updateTable(tasks.get(i), getTableByTaskType(taskType), taskType);
@@ -294,18 +324,23 @@ public class GWTReportUI implements EntryPoint {
     	  String url = REST_WS_URL + "http://localhost:8080/DataControllerWebServices/TaskService/run/" + getTaskTypeName(taskType) + "/" + task.getTaskName();
     	  sendRequestToServer(url, taskType, new RequestCallback() {
   	        public void onError(Request request, Throwable exception) {
+  	        	taskRunning = false;
   	          displayError("Error running task " + task.getTaskName());
   	        }
 
   	        public void onResponseReceived(Request request, Response response) {
   	          if (200 == response.getStatusCode()) {
   	        	  System.out.println("Successfully ran task " + task.getTaskName());
+  	        	taskRunning = false;
   	          } else {
+  	        	taskRunning = false;
   	        	  System.out.println("Response status code: " + response.getStatusCode());
-  	        	displayError("Error running task " + task.getTaskName());
+  	        	displayError("Error running task " + task.getTaskName());  	        	
   	          }
   	        }
   	      });
+    	  taskRunning = true;
+    	  showProgressBar(taskType, task.getTaskName());
       }
     });
     table.setWidget(row, 8, runTaskButton);    
