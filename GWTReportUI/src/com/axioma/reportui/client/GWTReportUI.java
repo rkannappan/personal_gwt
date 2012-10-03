@@ -62,7 +62,11 @@ public class GWTReportUI implements EntryPoint {
 	  raTasksFlexTable.setText(0, 1, "Portfolio");
 	  raTasksFlexTable.setText(0, 2, "Benchmark");
 	  raTasksFlexTable.setText(0, 3, "Risk Model");
-	  raTasksFlexTable.setText(0, 4, "Run");
+	  raTasksFlexTable.setText(0, 4, "Classification"); 	  
+	  raTasksFlexTable.setText(0, 5, "Frequency");
+	  raTasksFlexTable.setText(0, 6, "Start Date");
+	  raTasksFlexTable.setText(0, 7, "End Date");
+	  raTasksFlexTable.setText(0, 8, "Run");
 	  
     // Create table for report tasks.
     reportingTasksFlexTable.setText(0, 0, "Task Name");
@@ -70,7 +74,10 @@ public class GWTReportUI implements EntryPoint {
     reportingTasksFlexTable.setText(0, 2, "Benchmark");
     reportingTasksFlexTable.setText(0, 3, "Risk Model");
     reportingTasksFlexTable.setText(0, 4, "Classification");    
-    reportingTasksFlexTable.setText(0, 5, "Run");
+    reportingTasksFlexTable.setText(0, 5, "Frequency");
+    reportingTasksFlexTable.setText(0, 6, "Start Date");
+    reportingTasksFlexTable.setText(0, 7, "End Date");
+    reportingTasksFlexTable.setText(0, 8, "Run");
 
     // Add styles to elements in the stock list table.
     raTasksFlexTable.setCellPadding(6);
@@ -275,9 +282,10 @@ public class GWTReportUI implements EntryPoint {
     table.setText(row, 1, task.getParams().getPortfolio());
     table.setText(row, 2, task.getParams().getBenchmark());	  
     table.setText(row, 3, task.getParams().getRiskModel());
-    if (taskType == REPORT) {
-    	table.setText(row, 4, task.getParams().getClassification());
-    }
+    table.setText(row, 4, task.getParams().getClassification());
+    table.setText(row, 5, task.getParams().getSamplingFrequency());
+    table.setText(row, 6, task.getParams().getStartDate());
+    table.setText(row, 7, task.getParams().getEndDate());
     
     // Add a button to run the task.
     Button runTaskButton = new Button("<img border='0' src='images/RunTask.png'/>");
@@ -300,11 +308,7 @@ public class GWTReportUI implements EntryPoint {
   	      });
       }
     });
-    int runTaskButtonColumn = 4;
-    if (taskType == REPORT) {
-    	runTaskButtonColumn = 5;
-    }
-    table.setWidget(row, runTaskButtonColumn, runTaskButton);    
+    table.setWidget(row, 8, runTaskButton);    
   }
   
   private boolean isNewTask(final Task task, final int taskType) {
