@@ -15,7 +15,9 @@ import com.google.gwt.user.client.Random;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.DialogBox;
 import com.google.gwt.user.client.ui.FlexTable;
+import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
@@ -252,21 +254,48 @@ public class GWTReportUI implements EntryPoint {
   }
   
   private void showProgressBar(final int taskType, final String taskName) {	  
+		final DialogBox dialogBox = new DialogBox();
+		dialogBox.setText("Running task " + taskName);
+		dialogBox.setAnimationEnabled(true);
+		final HTML progressInfoLabel = new HTML();
+		progressInfoLabel.setHTML("<br><br><br><br><br>");
+		VerticalPanel dialogVPanel = new VerticalPanel();
+//		dialogVPanel.addStyleName("dialogVPanel");
+		dialogVPanel.add(progressInfoLabel);
+		dialogVPanel.setHorizontalAlignment(VerticalPanel.ALIGN_RIGHT);
+		final Button closeButton = new Button("Close");
+		// We can set the id of a widget by accessing its Element
+		closeButton.getElement().setId("closeButton");
+		dialogVPanel.add(closeButton);
+		dialogBox.setWidget(dialogVPanel);	  
+		dialogBox.center();
+		closeButton.setFocus(true);
+		
+		closeButton.addClickHandler(new ClickHandler() {
+			public void onClick(ClickEvent event) {
+				dialogBox.hide();
+			}
+		});
+
+	  
 	  final String progressURL = REST_WS_URL + "http://localhost:8080/DataControllerWebServices/TaskService/progress/" + getTaskTypeName(taskType) + "/" + taskName;
 	  
+	  // Hack to wait for new task instance to be created
 	    Timer waitTimer = new Timer() {
 		      @Override
 		      public void run() {
 		      }
 		    };
-		    waitTimer.schedule(5000);
+		    waitTimer.schedule(10000);
 		  
 	    Timer refreshTimer = new Timer() {
 	      @Override
 	      public void run() {
 	    	  if (taskRunning) {
-	    		  getProgress(progressURL, taskType, taskName);
+	    		  consumeProgressMessages(progressURL, taskType, taskName, progressInfoLabel, 1);
 	    	  } else {
+	    		  consumeProgressMessages(progressURL, taskType, taskName, progressInfoLabel, 10);
+	    		  dialogBox.hide();	    		  
 	    		  this.cancel();
 	    	  }
 	      }
@@ -274,38 +303,27 @@ public class GWTReportUI implements EntryPoint {
 	    refreshTimer.scheduleRepeating(PROGRESS_REFRESH_INTERVAL);
   }
   
-  private void getProgress(final String url, final int taskType, final String taskName) {
-	  sendRequestToServer(url, taskType, new RequestCallback() {
-	        public void onError(Request request, Throwable exception) {
-	          displayError("Error running task " + taskName);
-	        }
-
-	        public void onResponseReceived(Request request, Response response) {
-	          if (200 == response.getStatusCode()) {
-	        	  System.out.println("Progress info " + new Date() + response.getText());
-	          } else {
-	        	  System.out.println("Response status code: " + response.getStatusCode());
-	        	displayError("Error running task " + taskName);
-	          }
-	        }
-	      });
-  }
-  
-  private void consumeAllProgressMessages(final String url, final int taskType, final String taskName) {
-	  sendRequestToServer(url, taskType, new RequestCallback() {
-	        public void onError(Request request, Throwable exception) {
-	          displayError("Error running task " + taskName);
-	        }
-
-	        public void onResponseReceived(Request request, Response response) {
-	          if (200 == response.getStatusCode()) {
-	        	  System.out.println("Progress info " + new Date() + response.getText());
-	          } else {
-	        	  System.out.println("Response status code: " + response.getStatusCode());
-	        	displayError("Error running task " + taskName);
-	          }
-	        }
-	      });
+  private void consumeProgressMessages(final String progressURL, final int taskType, final String taskName, final HTML progressInfoLabel, int num) {
+	  for (int i = 0; i< num; i++) {
+		  sendRequestToServer(progressURL, taskType, new RequestCallback() {
+		        public void onError(Request request, Throwable exception) {
+		        	progressInfoLabel.setHTML("<br><br>Error running task " + taskName + "<br><br><br>");
+		        }
+	
+		        public void onResponseReceived(Request request, Response response) {
+		          if (200 == response.getStatusCode()) {
+		        	  String progressInfo = response.getText();
+		        	  if (progressInfo != null & !progressInfo.trim().isEmpty()) {
+		        		  progressInfoLabel.setHTML("<br><br>" + progressInfo + "<br><br><br>");
+			        	  System.out.println("Progress info " + new Date() + progressInfo);
+		        	  }
+		          } else {
+		        	  System.out.println("Response status code: " + response.getStatusCode());
+		        	  progressInfoLabel.setHTML("<br><br>Error running task " + taskName + "<br><br><br>");
+		          }
+		        }
+		      });
+	  }
   }  
 
   private void updateTable(JsArray<Task> tasks, final int taskType) {
