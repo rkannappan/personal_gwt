@@ -131,89 +131,7 @@ public class GWTReportUI implements EntryPoint {
 //      }
 //    };
 //    refreshTimer.scheduleRepeating(REFRESH_INTERVAL);
-
-//    // Listen for mouse events on the Add button.
-//    addStockButton.addClickHandler(new ClickHandler() {
-//      public void onClick(ClickEvent event) {
-//        addStock();
-//      }
-//    });
-//
-//    // Listen for keyboard events in the input box.
-//    newSymbolTextBox.addKeyPressHandler(new KeyPressHandler() {
-//      public void onKeyPress(KeyPressEvent event) {
-//        if (event.getCharCode() == KeyCodes.KEY_ENTER) {
-//          addStock();
-//        }
-//      }
-//    });
   }
-
-//  /**
-//   * Add stock to FlexTable. Executed when the user clicks the addStockButton or
-//   * presses enter in the newSymbolTextBox.
-//   */
-//  private void addStock() {
-//    final String symbol = newSymbolTextBox.getText().toUpperCase().trim();
-//    newSymbolTextBox.setFocus(true);
-//
-//    // Stock code must be between 1 and 10 chars that are numbers, letters, or dots.
-//    if (!symbol.matches("^[0-9a-zA-Z\\.]{1,10}$")) {
-//      Window.alert("'" + symbol + "' is not a valid symbol.");
-//      newSymbolTextBox.selectAll();
-//      return;
-//    }
-//
-//    newSymbolTextBox.setText("");
-//
-//    // Don't add the stock if it's already in the table.
-//    if (tasks.contains(symbol))
-//      return;
-//
-//    // Add the stock to the table.
-//    int row = reportingTasksFlexTable.getRowCount();
-//    tasks.add(symbol);
-//    reportingTasksFlexTable.setText(row, 0, symbol);
-//    reportingTasksFlexTable.setWidget(row, 2, new Label());
-//    reportingTasksFlexTable.getCellFormatter().addStyleName(row, 1, "watchListNumericColumn");
-//    reportingTasksFlexTable.getCellFormatter().addStyleName(row, 2, "watchListNumericColumn");
-//    reportingTasksFlexTable.getCellFormatter().addStyleName(row, 3, "watchListRemoveColumn");
-//
-//    // Add a button to remove this stock from the table.
-//    Button removeStockButton = new Button("x");
-//    removeStockButton.addStyleDependentName("remove");
-//    removeStockButton.addClickHandler(new ClickHandler() {
-//      public void onClick(ClickEvent event) {
-//        int removedIndex = tasks.indexOf(symbol);
-//        tasks.remove(removedIndex);
-//        reportingTasksFlexTable.removeRow(removedIndex + 1);
-//      }
-//    });
-//    reportingTasksFlexTable.setWidget(row, 3, removeStockButton);
-//
-//    // Get the stock price.
-//    refreshTasks();
-//
-//  }
-
-//  /**
-//   * Generate random stock prices.
-//   */
-//  private void refreshWatchList() {
-//    final double MAX_PRICE = 100.0; // $100.00
-//    final double MAX_PRICE_CHANGE = 0.02; // +/- 2%
-//
-//    StockPrice[] prices = new StockPrice[stocks.size()];
-//    for (int i = 0; i < stocks.size(); i++) {
-//      double price = Random.nextDouble() * MAX_PRICE;
-//      double change = price * MAX_PRICE_CHANGE
-//          * (Random.nextDouble() * 2.0 - 1.0);
-//
-//      prices[i] = new StockPrice(stocks.get(i), price, change);
-//    }
-//
-//    updateTable(prices);
-//  }
   
   private void refreshTasks() {
 	  this.refreshTasks(RISK_ANALYSIS);
@@ -363,6 +281,9 @@ public class GWTReportUI implements EntryPoint {
     Button runTaskButton = new Button("<img border='0' src='images/RunTask.png'/>");
     runTaskButton.addClickHandler(new ClickHandler() {
       public void onClick(ClickEvent event) {
+    	  // Clear any errors.
+    	    errorMsgLabel.setVisible(false);
+    	  
     	  String url = REST_WS_URL + "http://localhost:8080/DataControllerWebServices/TaskService/run/" + getTaskTypeName(taskType) + "/" + task.getTaskName();
     	  sendRequestToServer(url, taskType, new RequestCallback() {
   	        public void onError(Request request, Throwable exception) {
