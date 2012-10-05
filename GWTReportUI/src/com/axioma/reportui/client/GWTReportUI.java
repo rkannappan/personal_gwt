@@ -3,6 +3,7 @@ package com.axioma.reportui.client;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JsArray;
+import com.google.gwt.dom.client.Style;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.KeyCodes;
@@ -16,12 +17,17 @@ import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.DialogBox;
+import com.google.gwt.user.client.ui.DockLayoutPanel;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.RootLayoutPanel;
 import com.google.gwt.user.client.ui.RootPanel;
+import com.google.gwt.user.client.ui.ScrollPanel;
+import com.google.gwt.user.client.ui.StackLayoutPanel;
+import com.google.gwt.user.client.ui.TabLayoutPanel;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
 
@@ -42,11 +48,9 @@ import java.util.Set;
 public class GWTReportUI implements EntryPoint {
 
   private static final int REFRESH_INTERVAL = 1000; // ms
-  private VerticalPanel mainPanel = new VerticalPanel();
   private FlexTable raTasksFlexTable = new FlexTable();
   private FlexTable reportingTasksFlexTable = new FlexTable();
   private FlexTable eventsFlexTable = new FlexTable();
-  private HorizontalPanel addPanel = new HorizontalPanel();
   private Button addStockButton = new Button("Add");
   private Label lastUpdatedLabel = new Label();
   private Set<String> raTaskNames = new HashSet<String>();
@@ -120,39 +124,54 @@ public class GWTReportUI implements EntryPoint {
     errorMsgLabel.setStyleName("errorMessage");
     errorMsgLabel.setVisible(false);
     
-    HTML raTasksLabel = new HTML();
-    raTasksLabel.setHTML("<b>Risk Analysis Tasks</b>");
-    
     HTML spaceLabel = new HTML();
     spaceLabel.setHTML("<br><br>");        
-    
-    HTML eventViewerLabel = new HTML();
-    eventViewerLabel.setHTML("<b>Event Viewer</b>");  
-    
+        
     Button clearEventsButton = new Button("Clear Events");
     clearEventsButton.addStyleName("clearEventsButton");
 
-    HTML reportTasksLabel = new HTML();
-    reportTasksLabel.setHTML("<b>Report Tasks</b>");
-
-    // Assemble Main panel.
-    mainPanel.add(errorMsgLabel);
-    mainPanel.add(raTasksLabel);
-    mainPanel.add(new HTML("<br>"));
-    mainPanel.add(raTasksFlexTable);
-    mainPanel.add(spaceLabel);
-    mainPanel.add(eventViewerLabel);
-    mainPanel.add(new HTML("<br>"));
-    mainPanel.add(clearEventsButton);
-    mainPanel.add(new HTML("<br>"));
-    mainPanel.add(eventsFlexTable);    
-//    mainPanel.add(reportTasksLabel);
+    VerticalPanel header = new VerticalPanel();
+    header.add(new HTML("<br>"));
+    Image logo = new Image("images/logo.gif");
+    header.add(logo);
+    header.add(new HTML("<br>"));
+    
+    VerticalPanel raTasksPanel = new VerticalPanel();
+    // Assemble ra tasks panel.
+    raTasksPanel.add(errorMsgLabel);
+    raTasksPanel.add(new HTML("<br>"));
+    raTasksPanel.add(raTasksFlexTable);
+    raTasksPanel.add(spaceLabel);
 //    mainPanel.add(reportingTasksFlexTable);
-    mainPanel.add(addPanel);
-    mainPanel.add(lastUpdatedLabel);
+    raTasksPanel.add(lastUpdatedLabel);
+    
+    VerticalPanel reportTasksPanel = new VerticalPanel();
+    // Assemble report tasks panel.
+    reportTasksPanel.add(new HTML("<br>"));
+    reportTasksPanel.add(reportingTasksFlexTable);
+    reportTasksPanel.add(spaceLabel);    
+       
+   VerticalPanel eventViewerPanel = new VerticalPanel();
+
+   // Assemble Main panel.
+//   eventViewerPanel.add(errorMsgLabel);
+//   mainPanel.add(raTasksLabel);
+   eventViewerPanel.add(new HTML("<br>"));
+   eventViewerPanel.add(clearEventsButton);
+   eventViewerPanel.add(new HTML("<br>"));
+   eventViewerPanel.add(eventsFlexTable);    
+    
+    TabLayoutPanel tabPanel = new TabLayoutPanel(25, Style.Unit.PX);
+    tabPanel.add(new ScrollPanel(raTasksPanel), "Risk Analysis Tasks");
+    tabPanel.add(new ScrollPanel(reportTasksPanel), "Report Tasks");
+    tabPanel.add(new ScrollPanel(eventViewerPanel), "Event Viewer");
+    
+    DockLayoutPanel dockPanel = new DockLayoutPanel(Style.Unit.PX);
+    dockPanel.addNorth(header, 125);
+    dockPanel.add(tabPanel);
 
     // Associate the Main panel with the HTML host page.
-    RootPanel.get("tasks").add(mainPanel);
+    RootLayoutPanel.get().add(dockPanel);
     
     this.refreshTasks();
     
@@ -181,7 +200,7 @@ public class GWTReportUI implements EntryPoint {
   
   private void refreshTasks() {
 	  this.refreshTasks(RISK_ANALYSIS);
-//	  this.refreshTasks(REPORT);
+	  this.refreshTasks(REPORT);
   }
   
   private void refreshTasks(final int taskType) {
@@ -239,8 +258,8 @@ public class GWTReportUI implements EntryPoint {
 	    }
   }
   
-  private void showProgressBar(final int taskType, final String taskName, final String progressEventsQueueName) {	  
-		final DialogBox dialogBox = new DialogBox();
+  private void showProgressDialog(final int taskType, final String taskName, final String progressEventsQueueName) {	  
+		final DialogBox dialogBox = new DialogBox(false, false);
 		dialogBox.setText("Running task " + taskName);
 		dialogBox.setAnimationEnabled(true);
 		final HTML progressInfoLabel = new HTML();
@@ -249,11 +268,6 @@ public class GWTReportUI implements EntryPoint {
 		dialogVPanel.addStyleName("dialogVPanel");
 		dialogVPanel.add(progressInfoLabel);
 		dialogVPanel.setHorizontalAlignment(VerticalPanel.ALIGN_RIGHT);
-//		final Button closeButton = new Button("Close");
-//		// We can set the id of a widget by accessing its Element
-//		closeButton.getElement().setId("closeButton");
-//		dialogVPanel.add(closeButton);
-//		closeButton.setFocus(true);
 		dialogBox.add(dialogVPanel);
 		dialogBox.center();
 		
@@ -388,7 +402,7 @@ public class GWTReportUI implements EntryPoint {
   	        }
   	      });
     	  taskRunning = true;
-    	  showProgressBar(taskType, task.getTaskName(), progressEventsQueueName);
+    	  showProgressDialog(taskType, task.getTaskName(), progressEventsQueueName);
       }
     });
     table.setWidget(row, 8, runTaskButton);    
