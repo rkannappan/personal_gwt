@@ -18,6 +18,8 @@ public class ServerProxy extends HttpServlet {
       throws ServletException, IOException {
     String restWSUrl = req.getParameter("q");
     
+    restWSUrl = restWSUrl.replaceAll("REPLACE_ME_WITH_AMPERSAND", "&");
+    
     final URL url = new URL(restWSUrl);
     final BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()));
     

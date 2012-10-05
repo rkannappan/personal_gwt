@@ -40,11 +40,11 @@ import java.util.Set;
 
 public class GWTReportUI implements EntryPoint {
 
-  private static final int REFRESH_INTERVAL = 30000; // ms
-  private static final int PROGRESS_REFRESH_INTERVAL = 1000; // ms
+  private static final int REFRESH_INTERVAL = 1000; // ms
   private VerticalPanel mainPanel = new VerticalPanel();
   private FlexTable raTasksFlexTable = new FlexTable();
   private FlexTable reportingTasksFlexTable = new FlexTable();
+  private FlexTable eventsFlexTable = new FlexTable();
   private HorizontalPanel addPanel = new HorizontalPanel();
   private Button addStockButton = new Button("Add");
   private Label lastUpdatedLabel = new Label();
@@ -54,6 +54,9 @@ public class GWTReportUI implements EntryPoint {
   boolean taskRunning = false;
   
   private static final String REST_WS_URL = GWT.getModuleBaseURL() + "serverProxy?q=";
+  
+  private String allEventsQueueName;
+  private static final String PROGRESS_EVENTS_QUEUE_NAME_PREFIX = "progressEvents";
   
   private static final int RISK_ANALYSIS = 1;
   private static final int REPORT = 2;
@@ -82,6 +85,14 @@ public class GWTReportUI implements EntryPoint {
     reportingTasksFlexTable.setText(0, 6, "Start Date");
     reportingTasksFlexTable.setText(0, 7, "End Date");
     reportingTasksFlexTable.setText(0, 8, "Run");
+    
+    eventsFlexTable.setText(0, 0, "Date");
+    eventsFlexTable.setText(0, 1, "Type");
+    eventsFlexTable.setText(0, 2, "Priority");
+    eventsFlexTable.setText(0, 3, "Task Name");
+    eventsFlexTable.setText(0, 4, "Command Name");    
+    eventsFlexTable.setText(0, 5, "Message");
+  
 
     // Add styles to elements in the stock list table.
     raTasksFlexTable.setCellPadding(6);
@@ -91,6 +102,11 @@ public class GWTReportUI implements EntryPoint {
     reportingTasksFlexTable.setCellPadding(6);
     reportingTasksFlexTable.getRowFormatter().addStyleName(0, "taskHeader");
     reportingTasksFlexTable.addStyleName("taskTable");
+    
+    eventsFlexTable.setCellPadding(6);
+    eventsFlexTable.getRowFormatter().addStyleName(0, "taskHeader");
+    eventsFlexTable.addStyleName("taskTable");
+    
 //    reportingTasksFlexTable.getCellFormatter().addStyleName(0, 1, "watchListNumericColumn");
 //    reportingTasksFlexTable.getCellFormatter().addStyleName(0, 2, "watchListNumericColumn");
 //    reportingTasksFlexTable.getCellFormatter().addStyleName(0, 3, "watchListRemoveColumn");
@@ -103,18 +119,34 @@ public class GWTReportUI implements EntryPoint {
     errorMsgLabel.setStyleName("errorMessage");
     errorMsgLabel.setVisible(false);
     
-    Label raTasksLabel = new Label();
-    raTasksLabel.setText("Risk Analysis Tasks");
+    HTML raTasksLabel = new HTML();
+    raTasksLabel.setHTML("<b>Risk Analysis Tasks</b>");
+    
+    HTML spaceLabel = new HTML();
+    spaceLabel.setHTML("<br><br>");        
+    
+    HTML eventViewerLabel = new HTML();
+    eventViewerLabel.setHTML("<b>Event Viewer</b>");  
+    
+    Button clearEventsButton = new Button("Clear Events");
+    clearEventsButton.addStyleName("clearEventsButton");
 
-    Label reportTasksLabel = new Label();
-    reportTasksLabel.setText("Report Tasks");
+    HTML reportTasksLabel = new HTML();
+    reportTasksLabel.setHTML("<b>Report Tasks</b>");
 
     // Assemble Main panel.
     mainPanel.add(errorMsgLabel);
     mainPanel.add(raTasksLabel);
+    mainPanel.add(new HTML("<br>"));
     mainPanel.add(raTasksFlexTable);
-    mainPanel.add(reportTasksLabel);
-    mainPanel.add(reportingTasksFlexTable);
+    mainPanel.add(spaceLabel);
+    mainPanel.add(eventViewerLabel);
+    mainPanel.add(new HTML("<br>"));
+    mainPanel.add(clearEventsButton);
+    mainPanel.add(new HTML("<br>"));
+    mainPanel.add(eventsFlexTable);    
+//    mainPanel.add(reportTasksLabel);
+//    mainPanel.add(reportingTasksFlexTable);
     mainPanel.add(addPanel);
     mainPanel.add(lastUpdatedLabel);
 
@@ -122,26 +154,38 @@ public class GWTReportUI implements EntryPoint {
     RootPanel.get("tasks").add(mainPanel);
     
     this.refreshTasks();
-
-    // Setup timer to refresh list automatically.
-//    Timer refreshTimer = new Timer() {
-//      @Override
-//      public void run() {
-//        refreshTasks();
-//      }
-//    };
-//    refreshTimer.scheduleRepeating(REFRESH_INTERVAL);
+    
+    Date dt = new Date();
+    this.allEventsQueueName = "allEvents" + dt.getTime();
+    
+    // Setup timer to refresh events automatically.
+    Timer refreshTimer = new Timer() {
+      @Override
+      public void run() {
+        refreshEvents();
+      }
+    };
+    refreshTimer.scheduleRepeating(REFRESH_INTERVAL);
+    
+    clearEventsButton.addClickHandler(new ClickHandler() {
+        public void onClick(ClickEvent event) {
+        	int totalRows = eventsFlexTable.getRowCount();
+        	for (int row = 1; row<totalRows; row++) {
+        		eventsFlexTable.removeRow(row);
+        	}
+        }
+    });
   }
   
   private void refreshTasks() {
 	  this.refreshTasks(RISK_ANALYSIS);
-	  this.refreshTasks(REPORT);
+//	  this.refreshTasks(REPORT);
   }
   
   private void refreshTasks(final int taskType) {
 	    String url = getUrlByTaskType(taskType);
 
-	    this.sendRequestToServer(url, taskType, new RequestCallback() {
+	    this.sendRequestToServer(url, new RequestCallback() {
 	        public void onError(Request request, Throwable exception) {
 		          displayError("Couldn't retrieve JSON");
 		        }
@@ -158,7 +202,29 @@ public class GWTReportUI implements EntryPoint {
 		 });
    }
   
-  private void sendRequestToServer(final String url, final int taskType, final RequestCallback requestCallBack) {
+  private void refreshEvents() {
+	  final String url = REST_WS_URL + "http://localhost:8080/DataControllerWebServices/TaskService/run/events?eventQueueName=" + allEventsQueueName;
+
+	    this.sendRequestToServer(url, new RequestCallback() {
+	        public void onError(Request request, Throwable exception) {
+		          System.out.println("Couldn't retrieve JSON");
+		        }
+
+		        public void onResponseReceived(Request request, Response response) {
+		          if (200 == response.getStatusCode()) {
+		        	  String info = response.getText();
+		        	  if (info != null & !info.trim().isEmpty()) {
+		        		  updateEventsTable(info);
+		        	  }
+		          } else {
+		            System.out.println("Couldn't retrieve JSON (" + response.getStatusText()
+		                + ")");
+		          }
+		        }
+		 });
+  }  
+  
+  private void sendRequestToServer(final String url, final RequestCallback requestCallBack) {
 	  final String encodedURL = URL.encode(url);
 	  
 		 // Send request to server and catch any errors.
@@ -171,7 +237,7 @@ public class GWTReportUI implements EntryPoint {
 	    }
   }
   
-  private void showProgressBar(final int taskType, final String taskName) {	  
+  private void showProgressBar(final int taskType, final String taskName, final String progressEventsQueueName) {	  
 		final DialogBox dialogBox = new DialogBox();
 		dialogBox.setText("Running task " + taskName);
 		dialogBox.setAnimationEnabled(true);
@@ -195,8 +261,7 @@ public class GWTReportUI implements EntryPoint {
 			}
 		});
 
-	  
-	  final String progressURL = REST_WS_URL + "http://localhost:8080/DataControllerWebServices/TaskService/progress/" + getTaskTypeName(taskType) + "/" + taskName;
+		final String url = REST_WS_URL + "http://localhost:8080/DataControllerWebServices/TaskService/run/events?eventQueueName=" + progressEventsQueueName;
 	  
 	  // Hack to wait for new task instance to be created
 	    Timer waitTimer = new Timer() {
@@ -210,20 +275,20 @@ public class GWTReportUI implements EntryPoint {
 	      @Override
 	      public void run() {
 	    	  if (taskRunning) {
-	    		  consumeProgressMessages(progressURL, taskType, taskName, progressInfoLabel, 1);
+	    		  consumeProgressMessages(url, taskType, taskName, progressInfoLabel, 1);
 	    	  } else {
-	    		  consumeProgressMessages(progressURL, taskType, taskName, progressInfoLabel, 10);
+	    		  consumeProgressMessages(url, taskType, taskName, progressInfoLabel, 10);
 	    		  dialogBox.hide();	    		  
 	    		  this.cancel();
 	    	  }
 	      }
 	    };
-	    refreshTimer.scheduleRepeating(PROGRESS_REFRESH_INTERVAL);
+	    refreshTimer.scheduleRepeating(REFRESH_INTERVAL);
   }
   
   private void consumeProgressMessages(final String progressURL, final int taskType, final String taskName, final HTML progressInfoLabel, int num) {
 	  for (int i = 0; i< num; i++) {
-		  sendRequestToServer(progressURL, taskType, new RequestCallback() {
+		  sendRequestToServer(progressURL, new RequestCallback() {
 		        public void onError(Request request, Throwable exception) {
 		        	progressInfoLabel.setHTML("<br><br>Error running task " + taskName + "<br><br><br>");
 		        }
@@ -256,6 +321,27 @@ public class GWTReportUI implements EntryPoint {
  // Clear any errors.
     errorMsgLabel.setVisible(false);
   }
+  
+  private void updateEventsTable(final String info) {
+	  String[] tokens = info.split(":::");
+	  
+    int row = eventsFlexTable.getRowCount();
+    eventsFlexTable.setText(row, 0, cleanseData(tokens[0]));
+    eventsFlexTable.setText(row, 1, cleanseData(tokens[1]));
+    eventsFlexTable.setText(row, 2, cleanseData(tokens[2]));	  
+    eventsFlexTable.setText(row, 3, cleanseData(tokens[3]));
+    eventsFlexTable.setText(row, 4, cleanseData(tokens[4]));
+    eventsFlexTable.setText(row, 5, cleanseData(tokens[5]));
+  }
+  
+  private String cleanseData(final String input) {
+	  if (input == null || input.equals("null")) {
+		  return "";
+	  }
+	  
+	  int index = input.lastIndexOf(".");
+	  return input.substring(index + 1);
+  }
 
   /**
    * Update a single row in the tasks table.
@@ -283,9 +369,12 @@ public class GWTReportUI implements EntryPoint {
       public void onClick(ClickEvent event) {
     	  // Clear any errors.
     	    errorMsgLabel.setVisible(false);
+    	    
+    	    final String progressEventsQueueName = PROGRESS_EVENTS_QUEUE_NAME_PREFIX + new Date().getTime();
     	  
-    	  String url = REST_WS_URL + "http://localhost:8080/DataControllerWebServices/TaskService/run/" + getTaskTypeName(taskType) + "/" + task.getTaskName();
-    	  sendRequestToServer(url, taskType, new RequestCallback() {
+    	  String url = REST_WS_URL + "http://localhost:8080/DataControllerWebServices/TaskService/run/" + getTaskTypeName(taskType) + "/" + task.getTaskName() + "?allEventsQueueName=" + allEventsQueueName + "REPLACE_ME_WITH_AMPERSANDprogressEventsQueueName=" + progressEventsQueueName;
+    	  System.out.println(url);
+    	  sendRequestToServer(url, new RequestCallback() {
   	        public void onError(Request request, Throwable exception) {
   	        	taskRunning = false;
   	          displayError("Error running task " + task.getTaskName());
@@ -303,7 +392,7 @@ public class GWTReportUI implements EntryPoint {
   	        }
   	      });
     	  taskRunning = true;
-    	  showProgressBar(taskType, task.getTaskName());
+    	  showProgressBar(taskType, task.getTaskName(), progressEventsQueueName);
       }
     });
     table.setWidget(row, 8, runTaskButton);    

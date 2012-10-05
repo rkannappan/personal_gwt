@@ -21,3 +21,8 @@ body {
 .errorMessage {
   color: red;
 }
+
+.clearEventsButton {
+  display: block;
+  font-size: 16pt;
+}
