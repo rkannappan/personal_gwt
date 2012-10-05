@@ -26,3 +26,7 @@ body {
   display: block;
   font-size: 16pt;
 }
+
+.closeButton {
+    float:center;
+}

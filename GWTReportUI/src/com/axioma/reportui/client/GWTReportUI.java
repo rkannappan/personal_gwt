@@ -19,6 +19,7 @@ import com.google.gwt.user.client.ui.DialogBox;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.TextBox;
@@ -169,10 +170,11 @@ public class GWTReportUI implements EntryPoint {
     
     clearEventsButton.addClickHandler(new ClickHandler() {
         public void onClick(ClickEvent event) {
-        	int totalRows = eventsFlexTable.getRowCount();
-        	for (int row = 1; row<totalRows; row++) {
-        		eventsFlexTable.removeRow(row);
-        	}
+        	int count = eventsFlexTable.getRowCount();
+        	// First row is header. Don't remove it.
+        	while (count > 1) {
+        		eventsFlexTable.removeRow(1);
+        	} 
         }
     });
   }
@@ -242,35 +244,28 @@ public class GWTReportUI implements EntryPoint {
 		dialogBox.setText("Running task " + taskName);
 		dialogBox.setAnimationEnabled(true);
 		final HTML progressInfoLabel = new HTML();
-		progressInfoLabel.setHTML("<br><br><br><br><br>");
+		progressInfoLabel.setHTML("<br><br>Initializing task...<br><br><br>");
 		VerticalPanel dialogVPanel = new VerticalPanel();
-//		dialogVPanel.addStyleName("dialogVPanel");
+		dialogVPanel.addStyleName("dialogVPanel");
 		dialogVPanel.add(progressInfoLabel);
 		dialogVPanel.setHorizontalAlignment(VerticalPanel.ALIGN_RIGHT);
-		final Button closeButton = new Button("Close");
-		// We can set the id of a widget by accessing its Element
-		closeButton.getElement().setId("closeButton");
-		dialogVPanel.add(closeButton);
-		dialogBox.setWidget(dialogVPanel);	  
+//		final Button closeButton = new Button("Close");
+//		// We can set the id of a widget by accessing its Element
+//		closeButton.getElement().setId("closeButton");
+//		dialogVPanel.add(closeButton);
+//		closeButton.setFocus(true);
+		dialogBox.add(dialogVPanel);
 		dialogBox.center();
-		closeButton.setFocus(true);
 		
-		closeButton.addClickHandler(new ClickHandler() {
-			public void onClick(ClickEvent event) {
-				dialogBox.hide();
-			}
+		((HTML)dialogBox.getCaption()).addClickHandler(new ClickHandler() {  
+			  @Override  
+			  public void onClick(ClickEvent event) {  
+				  dialogBox.hide();
+			  }
 		});
-
+		
 		final String url = REST_WS_URL + "http://localhost:8080/DataControllerWebServices/TaskService/run/events?eventQueueName=" + progressEventsQueueName;
 	  
-	  // Hack to wait for new task instance to be created
-	    Timer waitTimer = new Timer() {
-		      @Override
-		      public void run() {
-		      }
-		    };
-		    waitTimer.schedule(10000);
-		  
 	    Timer refreshTimer = new Timer() {
 	      @Override
 	      public void run() {
@@ -331,7 +326,8 @@ public class GWTReportUI implements EntryPoint {
     eventsFlexTable.setText(row, 2, cleanseData(tokens[2]));	  
     eventsFlexTable.setText(row, 3, cleanseData(tokens[3]));
     eventsFlexTable.setText(row, 4, cleanseData(tokens[4]));
-    eventsFlexTable.setText(row, 5, cleanseData(tokens[5]));
+    // This is not cleansed on purpose as message would have . in the middle.
+    eventsFlexTable.setText(row, 5, tokens[5]);
   }
   
   private String cleanseData(final String input) {
