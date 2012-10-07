@@ -5,14 +5,15 @@ import com.google.gwt.core.client.JavaScriptObject;
 /**
  * @author rkannappan
  */
-class TaskParams extends JavaScriptObject {                              // (1)
+class TaskParams extends JavaScriptObject {
   // Overlay types always have protected, zero argument constructors.
-  protected TaskParams() {}                                              // (2)
+   protected TaskParams() {
+   }
 
-  // JSNI methods to get report task data.
+   // JSNI methods to get task data.
    public final native String getPortfolio() /*-{
 		return this.portfolioName[0];
-   }-*/; // (3)
+   }-*/;
 
    public final native String getBenchmark() /*-{
 		return (this.benchmarkName != null ? this.benchmarkName[0] : "None");
