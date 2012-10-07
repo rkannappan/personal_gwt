@@ -351,6 +351,10 @@ public class GWTReportUI implements EntryPoint {
 	  
 
       cleansedInput = cleansedInput.replaceAll("\"", "");
+      
+      cleansedInput = cleansedInput.replaceAll("\\u0026", "&");
+      cleansedInput = cleansedInput.replaceAll("\\u0027", "'");
+      cleansedInput = cleansedInput.replaceAll("\\u003d", "=");
 	  
 	  int index = input.lastIndexOf(".");
 	  return input.substring(index + 1);
