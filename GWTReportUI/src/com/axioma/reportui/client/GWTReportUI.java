@@ -327,7 +327,8 @@ public class GWTReportUI implements EntryPoint {
     	  
             String url =
                      GWTReportUI.REST_WS_URL + "http://localhost:8080/DataControllerWebServices/TaskService/run/"
-                              + GWTReportUI.this.getTaskTypeName(taskType) + "/" + task.getTaskName() + "?allEventsQueueName="
+                              + GWTReportUI.this.getTaskTypeName(taskType) + "/" + URL.encode(task.getTaskName())
+                              + "?allEventsQueueName="
                               + GWTReportUI.this.allEventsQueueName + "REPLACE_ME_WITH_AMPERSANDprogressEventsQueueName="
                               + progressEventsQueueName;
             GWTReportUI.this.sendRequestToServer(url, new RequestCallback() {
