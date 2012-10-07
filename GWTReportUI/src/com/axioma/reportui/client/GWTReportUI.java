@@ -1,64 +1,53 @@
 package com.axioma.reportui.client;
 
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
+
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JsArray;
 import com.google.gwt.dom.client.Style;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.event.dom.client.KeyCodes;
-import com.google.gwt.event.dom.client.KeyPressEvent;
-import com.google.gwt.event.dom.client.KeyPressHandler;
-import com.google.gwt.http.client.URL;
-import com.google.gwt.i18n.client.DateTimeFormat;
-import com.google.gwt.i18n.client.NumberFormat;
-import com.google.gwt.user.client.DOM;
-import com.google.gwt.user.client.Random;
-import com.google.gwt.user.client.Timer;
-import com.google.gwt.user.client.Window;
-import com.google.gwt.user.client.ui.Button;
-import com.google.gwt.user.client.ui.DialogBox;
-import com.google.gwt.user.client.ui.DockLayoutPanel;
-import com.google.gwt.user.client.ui.FlexTable;
-import com.google.gwt.user.client.ui.HTML;
-import com.google.gwt.user.client.ui.HorizontalPanel;
-import com.google.gwt.user.client.ui.Image;
-import com.google.gwt.user.client.ui.Label;
-import com.google.gwt.user.client.ui.RootLayoutPanel;
-import com.google.gwt.user.client.ui.RootPanel;
-import com.google.gwt.user.client.ui.ScrollPanel;
-import com.google.gwt.user.client.ui.StackLayoutPanel;
-import com.google.gwt.user.client.ui.TabLayoutPanel;
-import com.google.gwt.user.client.ui.TextBox;
-import com.google.gwt.user.client.ui.VerticalPanel;
-
 import com.google.gwt.http.client.Request;
 import com.google.gwt.http.client.RequestBuilder;
 import com.google.gwt.http.client.RequestCallback;
 import com.google.gwt.http.client.RequestException;
 import com.google.gwt.http.client.Response;
+import com.google.gwt.http.client.URL;
+import com.google.gwt.i18n.client.DateTimeFormat;
+import com.google.gwt.user.client.DOM;
+import com.google.gwt.user.client.Timer;
+import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.DialogBox;
+import com.google.gwt.user.client.ui.DockLayoutPanel;
+import com.google.gwt.user.client.ui.FlexTable;
+import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.HasHorizontalAlignment;
+import com.google.gwt.user.client.ui.Image;
+import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.RootLayoutPanel;
+import com.google.gwt.user.client.ui.ScrollPanel;
+import com.google.gwt.user.client.ui.TabLayoutPanel;
+import com.google.gwt.user.client.ui.VerticalPanel;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-
+/**
+ * @author rkannappan
+ */
 public class GWTReportUI implements EntryPoint {
 
   private static final int REFRESH_INTERVAL = 1000; // ms
-  private FlexTable raTasksFlexTable = new FlexTable();
-  private FlexTable returnsPATasksFlexTable = new FlexTable();
-  private FlexTable factorPATasksFlexTable = new FlexTable();
-  private FlexTable reportingTasksFlexTable = new FlexTable();
-  private FlexTable eventsFlexTable = new FlexTable();
-  private Button addStockButton = new Button("Add");
-  private Label lastUpdatedLabel = new Label();
-  private Set<String> raTaskNames = new HashSet<String>();
-  private Set<String> reportTaskNames = new HashSet<String>();
-  private Label errorMsgLabel = new Label();
+  private final FlexTable raTasksFlexTable = new FlexTable();
+  private final FlexTable returnsPATasksFlexTable = new FlexTable();
+  private final FlexTable factorPATasksFlexTable = new FlexTable();
+  private final FlexTable reportingTasksFlexTable = new FlexTable();
+  private final FlexTable eventsFlexTable = new FlexTable();
+  private final Button addStockButton = new Button("Add");
+  private final Label lastUpdatedLabel = new Label();
+  private final Set<String> raTaskNames = new HashSet<String>();
+  private final Set<String> reportTaskNames = new HashSet<String>();
+  private final Label errorMsgLabel = new Label();
   boolean taskRunning = false;
   
   private static final String REST_WS_URL = GWT.getModuleBaseURL() + "serverProxy?q=";
@@ -74,24 +63,25 @@ public class GWTReportUI implements EntryPoint {
   /**
    * Entry point method.
    */
-  public void onModuleLoad() {
-	  this.createTasksTable(raTasksFlexTable);
-	  this.createTasksTable(returnsPATasksFlexTable);
-	  this.createTasksTable(factorPATasksFlexTable);
-	  this.createTasksTable(reportingTasksFlexTable);
+  @Override
+public void onModuleLoad() {
+	  this.createTasksTable(this.raTasksFlexTable);
+	  this.createTasksTable(this.returnsPATasksFlexTable);
+	  this.createTasksTable(this.factorPATasksFlexTable);
+	  this.createTasksTable(this.reportingTasksFlexTable);
 	      
-    eventsFlexTable.setText(0, 0, "Date");
-    eventsFlexTable.setText(0, 1, "Type");
-    eventsFlexTable.setText(0, 2, "Priority");
-    eventsFlexTable.setText(0, 3, "Task Name");
-    eventsFlexTable.setText(0, 4, "Command Name");    
-    eventsFlexTable.setText(0, 5, "Message");
+    this.eventsFlexTable.setText(0, 0, "Date");
+    this.eventsFlexTable.setText(0, 1, "Type");
+    this.eventsFlexTable.setText(0, 2, "Priority");
+    this.eventsFlexTable.setText(0, 3, "Task Name");
+    this.eventsFlexTable.setText(0, 4, "Command Name");    
+    this.eventsFlexTable.setText(0, 5, "Message");
 
-    this.applyStyleToTable(raTasksFlexTable);
-    this.applyStyleToTable(returnsPATasksFlexTable);
-    this.applyStyleToTable(factorPATasksFlexTable);
-    this.applyStyleToTable(reportingTasksFlexTable);    
-    this.applyStyleToTable(eventsFlexTable);
+    this.applyStyleToTable(this.raTasksFlexTable);
+    this.applyStyleToTable(this.returnsPATasksFlexTable);
+    this.applyStyleToTable(this.factorPATasksFlexTable);
+    this.applyStyleToTable(this.reportingTasksFlexTable);    
+    this.applyStyleToTable(this.eventsFlexTable);
     
 //    reportingTasksFlexTable.getCellFormatter().addStyleName(0, 1, "watchListNumericColumn");
 //    reportingTasksFlexTable.getCellFormatter().addStyleName(0, 2, "watchListNumericColumn");
@@ -102,8 +92,8 @@ public class GWTReportUI implements EntryPoint {
 //    addPanel.add(addStockButton);
 //    addPanel.addStyleName("addPanel");
  // Assemble Main panel.
-    errorMsgLabel.setStyleName("errorMessage");
-    errorMsgLabel.setVisible(false);
+    this.errorMsgLabel.setStyleName("errorMessage");
+    this.errorMsgLabel.setVisible(false);
     
     Button clearEventsButton = new Button("Clear Events");
     clearEventsButton.addStyleName("clearEventsButton");
@@ -114,16 +104,16 @@ public class GWTReportUI implements EntryPoint {
     header.add(logo);
     header.add(new HTML("<br>"));
     
-    VerticalPanel raTasksPanel = this.createTasksPanel(raTasksFlexTable);
-    VerticalPanel returnsPATasksPanel = this.createTasksPanel(returnsPATasksFlexTable);
-    VerticalPanel factorPATasksPanel = this.createTasksPanel(factorPATasksFlexTable);
-    VerticalPanel reportTasksPanel = this.createTasksPanel(reportingTasksFlexTable);
+    VerticalPanel raTasksPanel = this.createTasksPanel(this.raTasksFlexTable);
+    VerticalPanel returnsPATasksPanel = this.createTasksPanel(this.returnsPATasksFlexTable);
+    VerticalPanel factorPATasksPanel = this.createTasksPanel(this.factorPATasksFlexTable);
+    VerticalPanel reportTasksPanel = this.createTasksPanel(this.reportingTasksFlexTable);
        
    VerticalPanel eventViewerPanel = new VerticalPanel();
    eventViewerPanel.add(new HTML("<br>"));
    eventViewerPanel.add(clearEventsButton);
    eventViewerPanel.add(new HTML("<br>"));
-   eventViewerPanel.add(eventsFlexTable);    
+   eventViewerPanel.add(this.eventsFlexTable);    
    eventViewerPanel.add(new HTML("<br>"));
     
     TabLayoutPanel tabPanel = new TabLayoutPanel(25, Style.Unit.PX);
@@ -149,17 +139,18 @@ public class GWTReportUI implements EntryPoint {
     Timer refreshTimer = new Timer() {
       @Override
       public void run() {
-        refreshEvents();
+        GWTReportUI.this.refreshEvents();
       }
     };
-    refreshTimer.scheduleRepeating(REFRESH_INTERVAL);
+    refreshTimer.scheduleRepeating(GWTReportUI.REFRESH_INTERVAL);
     
     clearEventsButton.addClickHandler(new ClickHandler() {
-        public void onClick(ClickEvent event) {
-        	int count = eventsFlexTable.getRowCount();
+        @Override
+      public void onClick(final ClickEvent event) {
+        	int count = GWTReportUI.this.eventsFlexTable.getRowCount();
         	// First row is header. Don't remove it.
         	while (count > 1) {
-        		eventsFlexTable.removeRow(1);
+        		GWTReportUI.this.eventsFlexTable.removeRow(1);
         	} 
         }
     });
@@ -195,26 +186,28 @@ public class GWTReportUI implements EntryPoint {
   }
   
   private void refreshTasks() {
-	  this.refreshTasks(RISK_ANALYSIS);
-	  this.refreshTasks(PERFORMANCE_ATTRIBUTION_RETURNS);
-	  this.refreshTasks(PERFORMANCE_ATTRIBUTION_FACTOR);
-	  this.refreshTasks(REPORT);
+	  this.refreshTasks(GWTReportUI.RISK_ANALYSIS);
+	  this.refreshTasks(GWTReportUI.PERFORMANCE_ATTRIBUTION_RETURNS);
+	  this.refreshTasks(GWTReportUI.PERFORMANCE_ATTRIBUTION_FACTOR);
+	  this.refreshTasks(GWTReportUI.REPORT);
   }
   
   private void refreshTasks(final int taskType) {
-	    String url = getUrlByTaskType(taskType);
+	    String url = this.getUrlByTaskType(taskType);
 
 	    this.sendRequestToServer(url, new RequestCallback() {
-	        public void onError(Request request, Throwable exception) {
-		          displayError("Couldn't retrieve JSON");
+	        @Override
+         public void onError(final Request request, final Throwable exception) {
+		          GWTReportUI.this.displayError("Couldn't retrieve JSON");
 		        }
 
-		        public void onResponseReceived(Request request, Response response) {
+		        @Override
+            public void onResponseReceived(final Request request, final Response response) {
 		          if (200 == response.getStatusCode()) {
 		        	  System.out.println("Response from server: " + response.getText());
-		            updateTable(asArrayOfTask(response.getText()), taskType);
+		            GWTReportUI.this.updateTable(GWTReportUI.this.asArrayOfTask(response.getText()), taskType);
 		          } else {
-		            displayError("Couldn't retrieve JSON (" + response.getStatusText()
+		            GWTReportUI.this.displayError("Couldn't retrieve JSON (" + response.getStatusText()
 		                + ")");
 		          }
 		        }
@@ -222,18 +215,20 @@ public class GWTReportUI implements EntryPoint {
    }
   
   private void refreshEvents() {
-	  final String url = REST_WS_URL + "http://localhost:8080/DataControllerWebServices/TaskService/run/events?eventQueueName=" + allEventsQueueName;
+	  final String url = GWTReportUI.REST_WS_URL + "http://localhost:8080/DataControllerWebServices/TaskService/run/events?eventQueueName=" + this.allEventsQueueName;
 
 	    this.sendRequestToServer(url, new RequestCallback() {
-	        public void onError(Request request, Throwable exception) {
+	        @Override
+         public void onError(final Request request, final Throwable exception) {
 		          System.out.println("Couldn't retrieve JSON");
 		        }
 
-		        public void onResponseReceived(Request request, Response response) {
+		        @Override
+            public void onResponseReceived(final Request request, final Response response) {
 		          if (200 == response.getStatusCode()) {
 		        	  String info = response.getText();
-		        	  if (info != null & !info.trim().isEmpty()) {
-		        		  updateEventsTable(info);
+		        	  if ((info != null) & !info.trim().isEmpty()) {
+		        		  GWTReportUI.this.updateEventsTable(info);
 		        	  }
 		          } else {
 		            System.out.println("Couldn't retrieve JSON (" + response.getStatusText()
@@ -252,7 +247,7 @@ public class GWTReportUI implements EntryPoint {
 	    try {
 	      builder.sendRequest(null, requestCallBack);
 	    } catch (RequestException e) {
-	      displayError("Couldn't retrieve JSON");
+	      this.displayError("Couldn't retrieve JSON");
 	    }
   }
   
@@ -265,45 +260,47 @@ public class GWTReportUI implements EntryPoint {
 		VerticalPanel dialogVPanel = new VerticalPanel();
 		dialogVPanel.addStyleName("dialogVPanel");
 		dialogVPanel.add(progressInfoLabel);
-		dialogVPanel.setHorizontalAlignment(VerticalPanel.ALIGN_RIGHT);
+		dialogVPanel.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_RIGHT);
 		dialogBox.add(dialogVPanel);
 		dialogBox.center();
 		
 		((HTML)dialogBox.getCaption()).addClickHandler(new ClickHandler() {  
 			  @Override  
-			  public void onClick(ClickEvent event) {  
+			  public void onClick(final ClickEvent event) {  
 				  dialogBox.hide();
 			  }
 		});
 		
-		final String url = REST_WS_URL + "http://localhost:8080/DataControllerWebServices/TaskService/run/events?eventQueueName=" + progressEventsQueueName;
+		final String url = GWTReportUI.REST_WS_URL + "http://localhost:8080/DataControllerWebServices/TaskService/run/events?eventQueueName=" + progressEventsQueueName;
 	  
 	    Timer refreshTimer = new Timer() {
 	      @Override
 	      public void run() {
-	    	  if (taskRunning) {
-	    		  consumeProgressMessages(url, taskType, taskName, progressInfoLabel, 1);
+	    	  if (GWTReportUI.this.taskRunning) {
+	    		  GWTReportUI.this.consumeProgressMessages(url, taskType, taskName, progressInfoLabel, 1);
 	    	  } else {
-	    		  consumeProgressMessages(url, taskType, taskName, progressInfoLabel, 10);
+	    		  GWTReportUI.this.consumeProgressMessages(url, taskType, taskName, progressInfoLabel, 10);
 	    		  dialogBox.hide();	    		  
 	    		  this.cancel();
 	    	  }
 	      }
 	    };
-	    refreshTimer.scheduleRepeating(REFRESH_INTERVAL);
+	    refreshTimer.scheduleRepeating(GWTReportUI.REFRESH_INTERVAL);
   }
   
-  private void consumeProgressMessages(final String progressURL, final int taskType, final String taskName, final HTML progressInfoLabel, int num) {
+  private void consumeProgressMessages(final String progressURL, final int taskType, final String taskName, final HTML progressInfoLabel, final int num) {
 	  for (int i = 0; i< num; i++) {
-		  sendRequestToServer(progressURL, new RequestCallback() {
-		        public void onError(Request request, Throwable exception) {
+		  this.sendRequestToServer(progressURL, new RequestCallback() {
+		        @Override
+            public void onError(final Request request, final Throwable exception) {
 		        	progressInfoLabel.setHTML("<br><br>Error running task " + taskName + "<br><br><br>");
 		        }
 	
-		        public void onResponseReceived(Request request, Response response) {
+		        @Override
+            public void onResponseReceived(final Request request, final Response response) {
 		          if (200 == response.getStatusCode()) {
 		        	  String progressInfo = response.getText();
-		        	  if (progressInfo != null & !progressInfo.trim().isEmpty()) {
+		        	  if ((progressInfo != null) & !progressInfo.trim().isEmpty()) {
 		        		  progressInfoLabel.setHTML("<br><br>" + progressInfo + "<br><br><br>");
 			        	  System.out.println("Progress info " + new Date() + progressInfo);
 		        	  }
@@ -316,39 +313,38 @@ public class GWTReportUI implements EntryPoint {
 	  }
   }  
 
-  private void updateTable(JsArray<Task> tasks, final int taskType) {
+  private void updateTable(final JsArray<Task> tasks, final int taskType) {
     for (int i = 0; i < tasks.length(); i++) {
-      updateTable(tasks.get(i), getTableByTaskType(taskType), taskType);
+      this.updateTable(tasks.get(i), this.getTableByTaskType(taskType), taskType);
     }
 
     // Display timestamp showing last refresh.
-    lastUpdatedLabel.setText("Last update : "
+    this.lastUpdatedLabel.setText("Last update : "
         + DateTimeFormat.getMediumDateTimeFormat().format(new Date()));
     
  // Clear any errors.
-    errorMsgLabel.setVisible(false);
+    this.errorMsgLabel.setVisible(false);
   }
   
   private void updateEventsTable(final String info) {
 	  String[] tokens = info.split(":::");
 	  
-    int row = eventsFlexTable.getRowCount();
-    eventsFlexTable.setText(row, 0, cleanseData(tokens[0]));
-    eventsFlexTable.setText(row, 1, cleanseData(tokens[1]));
-    eventsFlexTable.setText(row, 2, cleanseData(tokens[2]));	  
-    eventsFlexTable.setText(row, 3, cleanseData(tokens[3]));
-    eventsFlexTable.setText(row, 4, cleanseData(tokens[4]));
+    int row = this.eventsFlexTable.getRowCount();
+    this.eventsFlexTable.setText(row, 0, this.cleanseData(tokens[0]));
+    this.eventsFlexTable.setText(row, 1, this.cleanseData(tokens[1]));
+    this.eventsFlexTable.setText(row, 2, this.cleanseData(tokens[2]));	  
+    this.eventsFlexTable.setText(row, 3, this.cleanseData(tokens[3]));
+    this.eventsFlexTable.setText(row, 4, this.cleanseData(tokens[4]));
     // This is not cleansed on purpose as message would have . in the middle.
-    eventsFlexTable.setText(row, 5, tokens[5]);
+    this.eventsFlexTable.setText(row, 5, tokens[5]);
   }
   
   private String cleanseData(final String input) {
 	  String cleansedInput = input;
 	  
-	  if (input == null || input.equals("null")) {
+	  if ((input == null) || input.equals("null")) {
 		  return "";
-	  }
-	  
+      }
 
       cleansedInput = cleansedInput.replaceAll("\"", "");
       
@@ -366,7 +362,7 @@ public class GWTReportUI implements EntryPoint {
    * @param task the task for a single row.
    */
   private void updateTable(final Task task, final FlexTable table, final int taskType) {
-	 if (!isNewTask(task, taskType)) {
+	 if (!this.isNewTask(task, taskType)) {
 		 return;
 	 }
 	 
@@ -380,7 +376,7 @@ public class GWTReportUI implements EntryPoint {
     table.setText(row, 6, this.getStartDate(task, taskType));
     table.setText(row, 7, this.getEndDate(task, taskType));
     
-    if (taskType == REPORT) {
+    if (taskType == GWTReportUI.REPORT) {
     	for (int col=0; col<8; col++) {
     		DOM.setElementAttribute(table.getFlexCellFormatter().getElement(row, col), "title", task.getParams().getReportOutputPath());
     	}
@@ -389,33 +385,36 @@ public class GWTReportUI implements EntryPoint {
     // Add a button to run the task.
     Button runTaskButton = new Button("<img border='0' src='images/RunTask.png'/>");
     runTaskButton.addClickHandler(new ClickHandler() {
-      public void onClick(ClickEvent event) {
+      @Override
+      public void onClick(final ClickEvent event) {
     	  // Clear any errors.
-    	    errorMsgLabel.setVisible(false);
+    	    GWTReportUI.this.errorMsgLabel.setVisible(false);
     	    
-    	    final String progressEventsQueueName = PROGRESS_EVENTS_QUEUE_NAME_PREFIX + new Date().getTime();
+    	    final String progressEventsQueueName = GWTReportUI.PROGRESS_EVENTS_QUEUE_NAME_PREFIX + new Date().getTime();
     	  
-    	  String url = REST_WS_URL + "http://localhost:8080/DataControllerWebServices/TaskService/run/" + getTaskTypeName(taskType) + "/" + task.getTaskName() + "?allEventsQueueName=" + allEventsQueueName + "REPLACE_ME_WITH_AMPERSANDprogressEventsQueueName=" + progressEventsQueueName;
+    	  String url = GWTReportUI.REST_WS_URL + "http://localhost:8080/DataControllerWebServices/TaskService/run/" + GWTReportUI.this.getTaskTypeName(taskType) + "/" + task.getTaskName() + "?allEventsQueueName=" + GWTReportUI.this.allEventsQueueName + "REPLACE_ME_WITH_AMPERSANDprogressEventsQueueName=" + progressEventsQueueName;
     	  System.out.println(url);
-    	  sendRequestToServer(url, new RequestCallback() {
-  	        public void onError(Request request, Throwable exception) {
-  	        	taskRunning = false;
-  	          displayError("Error running task " + task.getTaskName());
+    	  GWTReportUI.this.sendRequestToServer(url, new RequestCallback() {
+  	        @Override
+         public void onError(final Request request, final Throwable exception) {
+  	        	GWTReportUI.this.taskRunning = false;
+  	          GWTReportUI.this.displayError("Error running task " + task.getTaskName());
   	        }
 
-  	        public void onResponseReceived(Request request, Response response) {
+  	        @Override
+         public void onResponseReceived(final Request request, final Response response) {
   	          if (200 == response.getStatusCode()) {
   	        	  System.out.println("Successfully ran task " + task.getTaskName());
-  	        	taskRunning = false;
+  	        	GWTReportUI.this.taskRunning = false;
   	          } else {
-  	        	taskRunning = false;
+  	        	GWTReportUI.this.taskRunning = false;
   	        	  System.out.println("Response status code: " + response.getStatusCode());
-  	        	displayError("Error running task " + task.getTaskName());  	        	
+  	        	GWTReportUI.this.displayError("Error running task " + task.getTaskName());  	        	
   	          }
   	        }
   	      });
-    	  taskRunning = true;
-    	  showProgressDialog(taskType, task.getTaskName(), progressEventsQueueName);
+    	  GWTReportUI.this.taskRunning = true;
+    	  GWTReportUI.this.showProgressDialog(taskType, task.getTaskName(), progressEventsQueueName);
       }
     });
     table.setWidget(row, 8, runTaskButton);    
@@ -424,18 +423,18 @@ public class GWTReportUI implements EntryPoint {
   private boolean isNewTask(final Task task, final int taskType) {
 	  final String taskName = task.getTaskName();
 	  
-	  if (taskType == RISK_ANALYSIS) {
-		  if (raTaskNames.contains(taskName)) {
+	  if (taskType == GWTReportUI.RISK_ANALYSIS) {
+		  if (this.raTaskNames.contains(taskName)) {
 			  return false;
 		  } else {
-			  raTaskNames.add(taskName);
+			  this.raTaskNames.add(taskName);
 			  return true;
 		  }
 	  } else {
-		  if (reportTaskNames.contains(taskName)) {
+		  if (this.reportTaskNames.contains(taskName)) {
 			  return false;
 		  } else {
-			  reportTaskNames.add(taskName);
+			  this.reportTaskNames.add(taskName);
 			  return true;
 		  }		  
 	  }
@@ -443,13 +442,13 @@ public class GWTReportUI implements EntryPoint {
   
   private String getClassification(final Task task, final int taskType) {
 	  String classification = null;
-	  if (taskType == RISK_ANALYSIS) {
+	  if (taskType == GWTReportUI.RISK_ANALYSIS) {
 		  classification = task.getParams().getClassification();
-	  } else if (taskType == PERFORMANCE_ATTRIBUTION_RETURNS) {
+	  } else if (taskType == GWTReportUI.PERFORMANCE_ATTRIBUTION_RETURNS) {
 		  classification = task.getParams().getMainAssetClassificationName();
-	  } else if (taskType == PERFORMANCE_ATTRIBUTION_FACTOR) {
+	  } else if (taskType == GWTReportUI.PERFORMANCE_ATTRIBUTION_FACTOR) {
 		  classification = task.getParams().getFactorClassificationType();
-	  } else if (taskType == REPORT) {
+	  } else if (taskType == GWTReportUI.REPORT) {
 		  classification = task.getParams().getClassification();
 	  }  
 	  
@@ -458,7 +457,7 @@ public class GWTReportUI implements EntryPoint {
   
   private String getFrequency(final Task task, final int taskType) {
 	  String frequency = null;
-	  if (taskType == REPORT) {
+	  if (taskType == GWTReportUI.REPORT) {
 		  frequency = task.getParams().getReportingFrequency();
 	  } else {
 		  frequency = task.getParams().getSamplingFrequency();
@@ -470,7 +469,7 @@ public class GWTReportUI implements EntryPoint {
   private String getStartDate(final Task task, final int taskType) {
 	  String startDate = null;
 	  
-	  if (taskType == REPORT) {
+	  if (taskType == GWTReportUI.REPORT) {
 		  if (!task.getParams().getPreDefinedTimePeriod().equals("None")) {
 			  startDate = task.getParams().getPreDefinedTimePeriod();
 		  } else if (!task.getParams().getCustomStartDate().equals("None")) {
@@ -493,7 +492,7 @@ public class GWTReportUI implements EntryPoint {
 		  endDate = "Most Recent Date";
 	  } 
 	  
-	  if (taskType == REPORT && !task.getParams().getCustomEndDate().equals("None")) {
+	  if ((taskType == GWTReportUI.REPORT) && !task.getParams().getCustomEndDate().equals("None")) {
 		  endDate = task.getParams().getCustomEndDate();
 	  }
 	  
@@ -505,14 +504,14 @@ public class GWTReportUI implements EntryPoint {
   }      
   
   private String getUrlByTaskType(final int taskType) {
-	  String url = REST_WS_URL + "http://localhost:8080/DataControllerWebServices/TaskService/";
-	  if (taskType == RISK_ANALYSIS) {
+	  String url = GWTReportUI.REST_WS_URL + "http://localhost:8080/DataControllerWebServices/TaskService/";
+	  if (taskType == GWTReportUI.RISK_ANALYSIS) {
 		  url += "RISK_ANALYSIS";
-	  } else if (taskType == PERFORMANCE_ATTRIBUTION_RETURNS) {
+	  } else if (taskType == GWTReportUI.PERFORMANCE_ATTRIBUTION_RETURNS) {
 		  url += "PERFORMANCE_ATTRIBUTION_RETURNS";
-	  } else if (taskType == PERFORMANCE_ATTRIBUTION_FACTOR) {
+	  } else if (taskType == GWTReportUI.PERFORMANCE_ATTRIBUTION_FACTOR) {
 		  url += "PERFORMANCE_ATTRIBUTION_FACTOR";
-	  } else if (taskType == REPORT) {
+	  } else if (taskType == GWTReportUI.REPORT) {
 		  url += "REPORT";
 	  }
 	  
@@ -521,13 +520,13 @@ public class GWTReportUI implements EntryPoint {
   
   private String getTaskTypeName(final int taskType) {
 	  String taskTypeName = null;
-	  if (taskType == RISK_ANALYSIS) {
+	  if (taskType == GWTReportUI.RISK_ANALYSIS) {
 		  taskTypeName = "RISK_ANALYSIS";
-	  } else if (taskType == PERFORMANCE_ATTRIBUTION_RETURNS) {
+	  } else if (taskType == GWTReportUI.PERFORMANCE_ATTRIBUTION_RETURNS) {
 		  taskTypeName = "PERFORMANCE_ATTRIBUTION_RETURNS";
-	  } else if (taskType == PERFORMANCE_ATTRIBUTION_FACTOR) {
+	  } else if (taskType == GWTReportUI.PERFORMANCE_ATTRIBUTION_FACTOR) {
 		  taskTypeName = "PERFORMANCE_ATTRIBUTION_FACTOR";
-	  } else if (taskType == REPORT) {
+	  } else if (taskType == GWTReportUI.REPORT) {
 		  taskTypeName = "REPORT";
 	  }
 
@@ -536,14 +535,14 @@ public class GWTReportUI implements EntryPoint {
   
   private FlexTable getTableByTaskType(final int taskType) {
 	  FlexTable table = null;
-	  if (taskType == RISK_ANALYSIS) {
-		  table = raTasksFlexTable;
-	  } else if (taskType == PERFORMANCE_ATTRIBUTION_RETURNS) {
-		  table = returnsPATasksFlexTable;
-	  } else if (taskType == PERFORMANCE_ATTRIBUTION_FACTOR) {
-		  table = factorPATasksFlexTable;
-	  } else if (taskType == REPORT) {
-		  table = reportingTasksFlexTable;
+	  if (taskType == GWTReportUI.RISK_ANALYSIS) {
+		  table = this.raTasksFlexTable;
+	  } else if (taskType == GWTReportUI.PERFORMANCE_ATTRIBUTION_RETURNS) {
+		  table = this.returnsPATasksFlexTable;
+	  } else if (taskType == GWTReportUI.PERFORMANCE_ATTRIBUTION_FACTOR) {
+		  table = this.factorPATasksFlexTable;
+	  } else if (taskType == GWTReportUI.REPORT) {
+		  table = this.reportingTasksFlexTable;
 	  }
 	  
 	  return table;
@@ -553,15 +552,15 @@ public class GWTReportUI implements EntryPoint {
    * Convert the string of JSON into JavaScript object.
    */
   private final native JsArray<Task> asArrayOfTask(String json) /*-{
-    return eval(json);
-  }-*/;  
+	return eval(json);
+}-*/;  
   
   /**
    * If can't get JSON, display error message.
    * @param error
    */
-  private void displayError(String error) {
-    errorMsgLabel.setText("Error: " + error);
-    errorMsgLabel.setVisible(true);
+  private void displayError(final String error) {
+    this.errorMsgLabel.setText("Error: " + error);
+    this.errorMsgLabel.setVisible(true);
   }
 }
