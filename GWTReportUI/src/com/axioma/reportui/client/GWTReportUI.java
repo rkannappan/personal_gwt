@@ -51,6 +51,8 @@ public class GWTReportUI implements EntryPoint {
    private final FlexTable reportingTasksFlexTable = new FlexTable();
    private final FlexTable eventsFlexTable = new FlexTable();
    private final Set<String> raTaskNames = new HashSet<String>();
+   private final Set<String> returnsPATaskNames = new HashSet<String>();
+   private final Set<String> factorPATaskNames = new HashSet<String>();
    private final Set<String> reportTaskNames = new HashSet<String>();
    private boolean taskRunning = false;
    private String allEventsQueueName;
@@ -476,7 +478,21 @@ public class GWTReportUI implements EntryPoint {
             this.raTaskNames.add(taskName);
             return true;
          }
-      } else {
+      } else if (taskType == GWTReportUI.PERFORMANCE_ATTRIBUTION_RETURNS) {
+         if (this.returnsPATaskNames.contains(taskName)) {
+            return false;
+         } else {
+            this.returnsPATaskNames.add(taskName);
+            return true;
+         }
+      } else if (taskType == GWTReportUI.PERFORMANCE_ATTRIBUTION_FACTOR) {
+         if (this.factorPATaskNames.contains(taskName)) {
+            return false;
+         } else {
+            this.factorPATaskNames.add(taskName);
+            return true;
+         }
+      } else if (taskType == GWTReportUI.REPORT) {
          if (this.reportTaskNames.contains(taskName)) {
             return false;
          } else {
@@ -484,6 +500,8 @@ public class GWTReportUI implements EntryPoint {
             return true;
          }
       }
+
+      return false;
    }
   
    private String getClassification(final Task task, final int taskType) {
